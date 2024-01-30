@@ -33,17 +33,16 @@ In GC2Tree.py a simple graph classifier is implemented:
 import numpy as np
 import networkx as nx
 
+formula = GuardedExistsGeq(4, Var.y, Or(GuardedExistsLeq(7, Var.x, E(Var.x, Var.y)), GuardedExistsGeq(13, Var.x, E(Var.x, Var.y))))
 graph = nx.fast_gnp_random_graph(10000, 0.001)
 adj = nx.adjacency_matrix(graph)
-X = np.zeros((graph.number_of_nodes(), 0))
-y = np.array([1 if formula.evaluate(graph, i) else 0 for i in range(graph.number_of_nodes())])
 
 test_samples = np.random.choice(len(y), size=int(0.2*len(y)), replace=False)
 test_mask = np.zeros(len(y), dtype=bool)
 test_mask[test_samples] = True
 
 clf = GC2Tree()
-clf.fit(adj, X, y, test_mask=test_mask)
+clf.fit(adj, np.zeros((graph.number_of_nodes(), 0)), y, test_mask=test_mask)
 clf.score(y, test_mask)
 ```
 
