@@ -13,7 +13,7 @@ Once installed you can experiment with the code in the notebooks.
 
 ## Functionality
 
-Currently, two main functionalities are implemented, the representation and evaluation of C2 formulas and a simple graph classifier based on color refinement and decision trees.
+Currently, two main functionalities are implemented, the representation and evaluation of C2 formulas and a simple node classifier inspired by the color refinement algorithm.
 
 ### C2 Formulas
 
@@ -28,15 +28,21 @@ formulas.evaluate(nx.fast_gnp_random_graph(10, 0.5))
 ```
 ### Graph Classification
 
-In wlclassifier.py a simple graph classifier is implemented:
+In GC2Tree.py a simple graph classifier is implemented:
 ```python
-phi = Exists(Var.x, (Exists(Var.y, E(Var.x, Var.y), 7)))
-X = [nx.fast_gnp_random_graph(10, 0.5) for _ in range(100)]
-y = [phi.evaluate(g) for g in X]
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+import numpy as np
+import networkx as nx
 
-clf = WLClassifier()
-clf.fit(X_train, y_train)
-clf.score(X_test, y_test)
+formula = GuardedExistsGeq(4, Var.y, Or(GuardedExistsLeq(7, Var.x, E(Var.x, Var.y)), GuardedExistsGeq(13, Var.x, E(Var.x, Var.y))))
+graph = nx.fast_gnp_random_graph(10000, 0.001)
+adj = nx.adjacency_matrix(graph)
+
+test_samples = np.random.choice(len(y), size=int(0.2*len(y)), replace=False)
+test_mask = np.zeros(len(y), dtype=bool)
+test_mask[test_samples] = True
+
+clf = GC2Tree()
+clf.fit(adj, np.zeros((graph.number_of_nodes(), 0)), y, test_mask=test_mask)
+clf.score(y, test_mask)
 ```
 
