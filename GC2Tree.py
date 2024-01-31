@@ -5,6 +5,24 @@ from sklearn.tree import DecisionTreeRegressor
 
 class GC2Tree:
     """Class representing the GC2 node classifier.
+
+    This class implements the GC2 node classifier, which is a graph-based
+    classification algorithm. It uses a decision tree regressor to learn
+    the relationships between node features and labels in a graph.
+
+    Attributes:
+        depth (int): The depth of the GC2 node classifier.
+        tree_depth (int): The maximum depth of the decision tree regressor.
+        strategy (ndarray): The strategy matrix used for label propagation.
+
+    Methods:
+        __init__: Initializes a GC2Tree object.
+        fit: Fits the GC2 node classifier to the training data.
+        init_data: Initializes the data required for training.
+        iterate: Performs one iteration of the GC2 node classifier.
+        predict: Predicts the labels of the test set.
+        score: Computes the accuracy score of the GC2 node classifier.
+
     """
     def __init__(
         self,
@@ -12,17 +30,15 @@ class GC2Tree:
         tree_depth=3,
         strategy=None
     ):
-        """Initialize a GC2NodeClassifier object. Encode node features
-        such that graph.nodes[vertex] yields a dictionary with the featurename
-        as key and the feature value as value. The label should also be part
-        of this dictionary.
+        """Initialize a GC2Tree object.
 
         Args:
-            data: A list of tuples containing a graph and a vertex.
-            target: The key of the label.
+            depth (int): The depth of the GC2 node classifier.
+            tree_depth (int): The maximum depth of the decision tree regressor.
+            strategy (ndarray): The strategy matrix used for label propagation.
 
         Returns:
-            A GC2NodeClassifier object.
+            None.
         """
         self.depth = depth
         self.tree_depth = tree_depth
@@ -33,6 +49,18 @@ class GC2Tree:
         self.strategy = strategy
 
     def fit(self, adj, X, y, test_mask=None):
+        """
+        Fits the GC2Tree model to the given data.
+
+        Parameters:
+        - adj: The adjacency matrix of the graph.
+        - X: The feature matrix.
+        - y: The target labels.
+        - test_mask: Optional mask indicating the test instances.
+
+        Returns:
+        None
+        """
         self.init_data(adj, X, y, test_mask)
 
         if self.strategy is None:
@@ -44,6 +72,20 @@ class GC2Tree:
             self.iterate(self.strategy[i], final=i == self.depth)
 
     def init_data(self, adj, X, y, test_mask=None):
+        """
+        Initializes the data for GC2Tree algorithm.
+
+        Parameters:
+        - adj (numpy.ndarray): Adjacency matrix representing the graph
+        structure.
+        - X (numpy.ndarray): Feature matrix.
+        - y (numpy.ndarray): Label matrix.
+        - test_mask (numpy.ndarray, optional): Boolean mask indicating the
+        test samples. Defaults to None.
+
+        Returns:
+        None
+        """
         self.adj = adj
         self.directed = (adj != adj.T).max() != 0
         if self.directed:
@@ -167,13 +209,19 @@ class GC2Tree:
             init_labels_undirected(0, 0, self.train_labels)
 
     def iterate(self, depth_weights=None, final=False):
-        """Iterate the GC2 node classifier.
+        """
+        Perform an iteration of the GC2Tree algorithm.
 
         Args:
-            depth_weights: A list of weights for each depth.
+            depth_weights (ndarray, optional): Weights for each depth level
+            in the tree. If not provided, default weights of 1 are used.
+            final (bool, optional): Flag indicating if this is the final
+            iteration.
 
-        Returns:
-            A GC2NodeClassifier object.
+        Raises:
+            AssertionError: If the length of depth_weights is not equal to
+            depth + 1.
+
         """
         if depth_weights is None:
             depth_weights = np.ones(self.depth + 1)
@@ -251,11 +299,7 @@ class GC2Tree:
             offset += self.n_accumulated_features
 
     def predict(self):
-        """Predict the labels of the test set.
-
-        Args:
-            test_mask: A boolean array indicating which nodes are in the test
-                set.
+        """Predict all labels.
 
         Returns:
             The predicted labels.
@@ -265,10 +309,11 @@ class GC2Tree:
         ]
 
     def score(self, y_true, test_mask=None):
-        """Compute the accuracy of the predictions.
+        """Compute the accuracy of the predictions on the test set.
 
         Args:
             y_true: The true labels.
+            test_mask: Boolean mask indicating the test instances.
 
         Returns:
             The accuracy of the predictions.
@@ -278,10 +323,11 @@ class GC2Tree:
         return np.mean((self.predict() == y_true)[test_mask])
 
     def training_accuracy(self, y_true, test_mask=None):
-        """Compute the accuracy of the predictions.
+        """Compute the accuracy of the predictions on the training set.
 
         Args:
             y_true: The true labels.
+            test_mask: Boolean mask indicating the test instances.
 
         Returns:
             The accuracy of the predictions.
